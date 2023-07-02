@@ -84,8 +84,6 @@ class SyntaxTransformer(Transformer):
         return None
 
     def tag(self, args):
-        if len(args) == 0:
-            return Tag([], [])
         if args[-1] is None:
             args.pop(-1)
         children = args.pop(-1)
