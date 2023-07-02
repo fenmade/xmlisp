@@ -39,39 +39,29 @@ class Atom:
         return self.identifier
 
 
-class List(list):
-    @classmethod
-    def is_children(cls, object):
-        return (
-            isinstance(object, cls) and
-            len(object) == 2 and
-            object[0] == ...)
-
-    def __init__(self, iterable):
-        items = list(iterable)
-        if self.__class__.is_children(items[-1]):
-            self.children = items[-1][1]
-            items.pop(-1)
-        else:
-            self.children = []
-        super().__init__(items)
+class Tag:
+    def __init__(self, props, children):
+        self.props = props
+        self.children = children
 
     def __repr__(self):
-        if len(self) == 0 and len(self.children) == 0:
+        if len(self.props) == 0 and len(self.children) == 0:
             return "<></>"
 
-        if self.children != []:
+        if self.children:
+            closing = repr(self.props[0]) if len(self.props) > 0 else ""
             return (
-                "<" + " ".join(map(repr, self)) + ">" +
+                "<" + " ".join(map(repr, self.props)) + ">" +
                 "\n".join(map(repr, self.children)) +
-                "</" + (repr(self[0]) if len(self) > 0 else "") + ">")
+                "</" + closing + ">")
 
-        return "<" + " ".join(map(repr, self)) + " />"
+        return "<" + " ".join(map(repr, self.props)) + " />"
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return super().__eq__(other) and self.children == other.children
-        return super().__eq__(other)
+        return (
+            isinstance(other, self.__class__) and
+            self.props == other.props and
+            self.children == other.children)
 
 
 class SyntaxTransformer(Transformer):
@@ -88,18 +78,18 @@ class SyntaxTransformer(Transformer):
         return self.list([Atom("pair")] + args)
 
     def list(self, args):
-        return List(args)
+        return Tag(args, [])
 
     def ignored(self, args):
         return None
 
     def tag(self, args):
         if len(args) == 0:
-            return self.list(args)
+            return Tag([], [])
         if args[-1] is None:
             args.pop(-1)
         children = args.pop(-1)
-        return self.list(args + [List([..., children])])
+        return Tag(args, children)
 
     def document(self, args):
         return args
