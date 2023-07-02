@@ -13,6 +13,7 @@ grammar = r"""
 %ignore COMMENT
 
 COMMENT : /<!--[^\n]*-->/
+CLOSE   : /<\/[^>]*>/
 
 ignored : expr
 ?expr   : SIGNED_NUMBER -> number
@@ -20,7 +21,7 @@ ignored : expr
         | CNAME -> atom
         | expr "=" expr -> pair
         | "<" expr+ "/>" -> list
-        | "<" expr* ">" document "</" ignored? ">" -> tag
+        | "<" expr* ">" document CLOSE -> tag
 
 document: expr*
 """
@@ -49,7 +50,10 @@ class Tag:
             return "<></>"
 
         if self.children:
-            closing = repr(self.props[0]) if len(self.props) > 0 else ""
+            if len(self.props) > 0 and isinstance(self.props[0], Atom):
+                closing = repr(self.props[0])
+            else:
+                closing = ""
             return (
                 "<" + " ".join(map(repr, self.props)) + ">" +
                 "\n".join(map(repr, self.children)) +
@@ -84,8 +88,7 @@ class SyntaxTransformer(Transformer):
         return None
 
     def tag(self, args):
-        if args[-1] is None:
-            args.pop(-1)
+        args.pop(-1)
         children = args.pop(-1)
         return Tag(args, children)
 
