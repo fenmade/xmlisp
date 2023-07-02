@@ -40,6 +40,10 @@ class Atom:
         return self.identifier
 
 
+def indent(text, indentation=" " * 4):
+    return indentation + text.replace("\n", "\n" + indentation)
+
+
 class Tag:
     def __init__(self, props, children):
         self.props = props
@@ -54,10 +58,10 @@ class Tag:
                 closing = repr(self.props[0])
             else:
                 closing = ""
-            return (
-                "<" + " ".join(map(repr, self.props)) + ">" +
-                "\n".join(map(repr, self.children)) +
-                "</" + closing + ">")
+            return "\n".join([
+                "<" + " ".join(map(repr, self.props)) + ">",
+                *[indent(repr(child)) for child in self.children],
+                "</" + closing + ">"])
 
         return "<" + " ".join(map(repr, self.props)) + " />"
 
